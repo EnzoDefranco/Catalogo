@@ -28,7 +28,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     (typeof product.precioL4 === 'number' ? product.precioL4 : product.precioLista4) ?? 0
   );
 
-  const imgSrc = product.imageUrl || `C:/xampp/htdocs/productosImagenesCodEnro/${product.idArticulo}.webp`;
+  const imgSrc = product.imageUrl || `http://localhost/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
     <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">
