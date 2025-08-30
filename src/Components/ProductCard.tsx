@@ -1,10 +1,8 @@
 // src/components/ProductCard.tsx
-import type { FC, ImgHTMLAttributes  } from 'react';
-// src/components/ProductCard.tsx
+import type { FC, ImgHTMLAttributes } from 'react';
 import type { Product } from '../types/products'; // 👈 type-only import
-import { parseDate } from '../types/products';   // 👈 normal import para función
+import { parseDate } from '../types/products';   // 👈 import para la función
 import { useMargin } from './useMargin';
-
 
 const FALLBACK_IMG = 'https://demofree.sirv.com/nope-not-here.jpg';
 
@@ -21,14 +19,15 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     e.currentTarget.src = FALLBACK_IMG;
   };
 
-  // Usa tu hook (resincroniza con costo/lista)
+  // 🔑 Siempre usamos precioLista4
   const { margen, setMargen, precioFinal } = useMargin(
     product.costoManual ?? 0,
-    // si viene precioL4 desde la API, lo priorizamos sobre precioLista4
-    (typeof product.precioL4 === 'number' ? product.precioL4 : product.precioLista4) ?? 0
+    product.precioLista4 ?? 0
   );
 
-  const imgSrc = product.imageUrl || `http://localhost/productosImagenesCodEnro/${product.idArticulo}.webp`;
+  const imgSrc =
+    product.imageUrl ||
+    `http://localhost/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
     <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">
@@ -50,6 +49,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
           {product.kilosUnitarios.toFixed(2)} KG
         </div>
       )}
+
 
       {/* Imagen */}
       <img
