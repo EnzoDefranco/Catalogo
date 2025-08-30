@@ -3,8 +3,9 @@ import type { FC, ImgHTMLAttributes } from 'react';
 import type { Product } from '../types/products'; // 👈 type-only import
 import { parseDate } from '../types/products';   // 👈 import para la función
 import { useMargin } from './useMargin';
+import { PROVEEDOR_LOGOS, FALLBACK_IMG } from "../types/logosProvedores";
 
-const FALLBACK_IMG = 'https://demofree.sirv.com/nope-not-here.jpg';
+
 
 interface ProductCardProps {
   product: Product;
@@ -14,10 +15,15 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const fecha = product.ultModificacion ? parseDate(product.ultModificacion) : '';
   const isOutOfStock = product.stock === 0;
 
-  const handleImgError: ImgHTMLAttributes<HTMLImageElement>['onError'] = (e) => {
-    e.currentTarget.onerror = null;
+const handleImgError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
+  e.currentTarget.onerror = null;
+
+  if (product.proveedorNombre && PROVEEDOR_LOGOS[product.proveedorNombre]) {
+    e.currentTarget.src = PROVEEDOR_LOGOS[product.proveedorNombre];
+  } else {
     e.currentTarget.src = FALLBACK_IMG;
-  };
+  }
+};
 
   // 🔑 Siempre usamos precioLista4
   const { margen, setMargen, precioFinal } = useMargin(
@@ -27,7 +33,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
 
   const imgSrc =
     product.imageUrl ||
-    `http://localhost/productosImagenesCodEnro/${product.idArticulo}.webp`;
+    `http://192.168.1.45/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
     <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">
@@ -52,13 +58,14 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
 
 
       {/* Imagen */}
-      <img
-        src={imgSrc}
-        alt={product.descripcion}
-        className="w-[200px] h-[200px] object-cover rounded-lg mx-auto"
-        loading="lazy"
-        onError={handleImgError}
-      />
+<img
+  src={imgSrc}
+  alt={product.descripcion}
+  className="w-[200px] h-[200px] object-contain rounded-lg mx-auto bg-white"
+  loading="lazy"
+  onError={handleImgError}
+/>
+
 
       {/* Título y detalles */}
       <div className="mt-4">

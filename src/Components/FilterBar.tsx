@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 type Props = { onChange?: () => void };
-const API = 'http://localhost/db.php';
+const API = 'http://192.168.1.45/db.php';
 
 export default function FilterBar({ onChange }: Props) {
   // seleccionados (desde la URL)

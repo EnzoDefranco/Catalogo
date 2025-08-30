@@ -54,12 +54,12 @@ export default function Header({ searchTerm = '' }: Props) {
 
             {/* Logo móvil */}
             <a href="/catalogo/" className="ml-2 block lg:hidden">
-              <img src="/newLogoBlack.png" className="h-8" alt="Logo móvil" />
+              <img src="/catalogo/newLogoBlack.png" className="h-8" alt="Logo móvil" />
             </a>
 
             {/* Logo desktop */}
             <a href="/catalogo/" className="hidden lg:block">
-              <img src="/logoAzul.png" className="h-8" alt="Logo desktop" />
+              <img src="/catalogo/logoAzul.png" className="h-8" alt="Logo desktop" />
             </a>
           </div>
 
