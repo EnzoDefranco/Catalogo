@@ -33,7 +33,7 @@ const handleImgError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
 
   const imgSrc =
     product.imageUrl ||
-    `http://192.168.1.45/productosImagenesCodEnro/${product.idArticulo}.webp`;
+    `http://192.168.1.45/catalogo/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
     <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">

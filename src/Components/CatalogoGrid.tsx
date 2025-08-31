@@ -82,7 +82,7 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
     setLoading(true);
     setError(null);
 
-fetch(`http://192.168.1.45/db.php?${qs}`, { signal: ctrl.signal })
+fetch(`http://192.168.1.45/catalogo/db.php?${qs}`, { signal: ctrl.signal })
   .then(async (res) => {
 
     if (!res.ok) {
