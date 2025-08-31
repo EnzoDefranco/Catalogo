@@ -82,22 +82,39 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
     setLoading(true);
     setError(null);
 
-    fetch(`http://192.168.1.45/db.php?${qs}`, { signal: ctrl.signal })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as ApiBuscarResp;
-        if ((json as any).error) throw new Error(String((json as any).error));
+fetch(`http://192.168.1.45/db.php?${qs}`, { signal: ctrl.signal })
+  .then(async (res) => {
+    console.log("📡 Fetch enviado a:", `http://192.168.1.45/db.php?${qs}`);
 
-        setItems(json.data ?? []);
-        setTotal(json.total ?? 0);
-        setTotalPages(json.totalPages ?? 1);
-      })
-      .catch((err) => {
-        if (err.name !== 'AbortError') setError(err.message || 'Error cargando datos');
-      })
-      .finally(() => setLoading(false));
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
 
-    return () => ctrl.abort();
+
+    const json = (await res.json()) as ApiBuscarResp;
+
+    if ((json as any).error) {
+      console.error("⚠️ Error en el JSON:", (json as any).error);
+      throw new Error(String((json as any).error));
+    }
+
+    setItems(json.data ?? []);
+    setTotal(json.total ?? 0);
+    setTotalPages(json.totalPages ?? 1);
+  })
+  .catch((err) => {
+    if (err.name !== 'AbortError') {
+      setError(err.message || 'Error cargando datos');
+    } 
+  })
+  .finally(() => {
+    setLoading(false);
+  });
+
+return () => {
+  console.log("🧹 Cleanup ejecutado, abortando fetch.");
+  ctrl.abort();
+};
   }, [qs]);
 
   return (
