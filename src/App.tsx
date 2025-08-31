@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Header from './Components/Header';
 import CatalogoGrid from './Components/CatalogoGrid';
 import FilterBar from './Components/FilterBar';
+import Carrousel from './Components/Carrousel';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -26,9 +27,10 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header fijo con buscador y burger */}
       <Header searchTerm={search} />
+      <Carrousel />
 
       {/* pt-36 para dejar espacio al header fijo */}
-      <main className="max-w-6xl mx-auto p-4 pt-36">
+      <main className="max-w-6xl mx-auto p-4">
         <div className="mb-4">
           <FilterBar />
         </div>

@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import { useEffect, useState } from 'react';
 
 type Props = {
@@ -12,14 +11,15 @@ export default function Header({ searchTerm = '' }: Props) {
   // sincroniza cuando cambia la prop (por back/forward o carga inicial)
   useEffect(() => setQ(searchTerm), [searchTerm]);
 
-  const onSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
+  // Actualiza el querystring y dispara búsqueda en tiempo real
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQ(value);
     const sp = new URLSearchParams(window.location.search);
-    if (q.trim()) sp.set('q', q.trim());
+    if (value.trim()) sp.set('q', value.trim());
     else sp.delete('q');
-    history.pushState({}, '', `${location.pathname}?${sp.toString()}`);
-    window.dispatchEvent(new Event('popstate')); // para que el grid/filtros reaccionen
-    setOpen(false); // cerrar menú en mobile
+    history.replaceState({}, '', `${location.pathname}?${sp.toString()}`);
+    window.dispatchEvent(new Event('popstate'));
   };
 
   return (
@@ -65,7 +65,7 @@ export default function Header({ searchTerm = '' }: Props) {
 
           {/* CENTRO: Buscador (solo aquí) */}
           <div className="flex-1 mx-4 max-w-full lg:max-w-md">
-            <form onSubmit={onSubmit} className="relative">
+            <form className="relative">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -79,7 +79,7 @@ export default function Header({ searchTerm = '' }: Props) {
                 type="search"
                 name="q"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={onInputChange}
                 placeholder="Buscar por producto, proveedor o ID…"
                 className="w-full border border-gray-300 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />

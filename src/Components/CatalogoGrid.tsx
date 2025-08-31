@@ -84,7 +84,6 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
 
 fetch(`http://192.168.1.45/db.php?${qs}`, { signal: ctrl.signal })
   .then(async (res) => {
-    console.log("📡 Fetch enviado a:", `http://192.168.1.45/db.php?${qs}`);
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
@@ -134,23 +133,29 @@ return () => {
       </div>
 
       {/* Paginación */}
-      <div className="flex justify-center items-center space-x-4 mt-6">
+      <nav className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-8">
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1 || loading}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           « Anterior
         </button>
-        <span>Página {page} de {Math.max(1, totalPages)} · {total} resultados</span>
+
+        <span className="text-sm sm:text-base text-gray-700 font-medium">
+          Página <strong>{page}</strong> de <strong>{Math.max(1, totalPages)}</strong>
+          <span className="hidden sm:inline"> · {total} resultados</span>
+        </span>
+
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page >= totalPages || loading}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           Siguiente »
         </button>
-      </div>
+      </nav>
+
     </div>
   );
 }
