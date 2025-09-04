@@ -1,54 +1,83 @@
-// src/components/FilterBar.tsx
 import { useEffect, useMemo, useState } from 'react';
+import Select from 'react-select';
+import type { SingleValue, StylesConfig } from 'react-select';
+
 
 type Props = { onChange?: () => void };
-const API = 'http://192.168.1.45/catalogo/db.php';
+const API = 'https://tests-enzo.distrial.com.ar/db.php';
+
+type Opt = { value: string; label: string };
+
+// Helpers
+const toOptions = (arr: string[]): Opt[] => arr.map((x) => ({ value: x, label: x }));
+const esc = (s: string) => encodeURIComponent(s);
+
+// Estilos mínimos para “pill” redondeado (podés tunear a gusto)
+const pillStyles: StylesConfig<Opt, false> = {
+  control: (base, state) => ({
+    ...base,
+    minWidth: 220,
+    borderRadius: 9999,
+    borderColor: state.isFocused ? '#93c5fd' : '#d1d5db',
+    boxShadow: state.isFocused ? '0 0 0 1px #93c5fd' : 'none',
+    ':hover': { borderColor: '#9ca3af' },
+    fontSize: 14,
+  }),
+  valueContainer: (b) => ({ ...b, padding: '2px 10px' }),
+  indicatorsContainer: (b) => ({ ...b, paddingRight: 6 }),
+  menu: (b) => ({ ...b, borderRadius: 12, overflow: 'hidden' }),
+};
 
 export default function FilterBar({ onChange }: Props) {
-  // seleccionados (desde la URL)
+  // valores desde la URL
   const [proveedor, setProveedor] = useState<string>(() => new URLSearchParams(location.search).get('proveedor') || '');
   const [division,  setDivision]  = useState<string>(() => new URLSearchParams(location.search).get('division')  || '');
   const [linea,     setLinea]     = useState<string>(() => new URLSearchParams(location.search).get('linea')     || '');
   const [rubro,     setRubro]     = useState<string>(() => new URLSearchParams(location.search).get('rubro')     || '');
 
-  // opciones
-  const [proveedores, setProveedores] = useState<string[]>([]);
-  const [divisiones,  setDivisiones]  = useState<string[]>([]);
-  const [lineas,      setLineas]      = useState<string[]>([]);
-  const [rubros,      setRubros]      = useState<string[]>([]);
-
-  const esc = (s: string) => encodeURIComponent(s);
+  // opciones + loading
+  const [proveedores, setProveedores] = useState<Opt[]>([]);
+  const [divisiones,  setDivisiones]  = useState<Opt[]>([]);
+  const [lineas,      setLineas]      = useState<Opt[]>([]);
+  const [rubros,      setRubros]      = useState<Opt[]>([]);
+  const [loading, setLoading] = useState<{p:boolean; d:boolean; l:boolean; r:boolean}>({
+    p:false,d:false,l:false,r:false
+  });
 
   /* ====== combos ====== */
 
-  // Proveedores (se puede filtrar por división; si d cambia, refrescamos)
+  // Proveedores (depende de división opcional)
   useEffect(() => {
+    setLoading((s) => ({ ...s, p: true }));
     const url = division
       ? `${API}?action=proveedores&division=${esc(division)}`
       : `${API}?action=proveedores`;
     fetch(url)
       .then(r => r.json())
       .then((list: string[]) => {
-        setProveedores(list);
+        const opts = toOptions(list);
+        setProveedores(opts);
         if (proveedor && !list.includes(proveedor)) {
           setProveedor('');
           applyToUrl('', division, linea, rubro);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading((s) => ({ ...s, p:false })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [division]);
 
-  // Divisiones: si hay proveedor, filtra; si no, trae todas
+  // Divisiones (depende de proveedor opcional)
   useEffect(() => {
+    setLoading((s) => ({ ...s, d:true }));
     const url = proveedor
       ? `${API}?action=divisiones&proveedor=${esc(proveedor)}`
       : `${API}?action=divisiones`;
     fetch(url)
       .then(r => r.json())
       .then((list: string[]) => {
-        setDivisiones(list);
-        // si la división actual ya no existe, limpiar dependientes
+        const opts = toOptions(list);
+        setDivisiones(opts);
         if (division && !list.includes(division)) {
           setDivision('');
           setLinea('');
@@ -56,42 +85,49 @@ export default function FilterBar({ onChange }: Props) {
           applyToUrl(proveedor, '', '', '');
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading((s) => ({ ...s, d:false })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proveedor]);
 
-  // Líneas: dependen de división (proveedor opcional)
+  // Líneas (depende de división; proveedor opcional)
   useEffect(() => {
     if (!division) { setLineas([]); setLinea(''); return; }
+    setLoading((s) => ({ ...s, l:true }));
     const url = `${API}?action=lineas&division=${esc(division)}${proveedor ? `&proveedor=${esc(proveedor)}` : ''}`;
     fetch(url)
       .then(r => r.json())
       .then((list: string[]) => {
-        setLineas(list);
+        const opts = toOptions(list);
+        setLineas(opts);
         if (linea && !list.includes(linea)) {
           setLinea('');
           setRubro('');
           applyToUrl(proveedor, division, '', '');
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading((s) => ({ ...s, l:false })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [division, proveedor]);
 
-  // Rubros: dependen de división + línea (proveedor opcional)
+  // Rubros (depende de división + línea; proveedor opcional)
   useEffect(() => {
     if (!division || !linea) { setRubros([]); setRubro(''); return; }
+    setLoading((s) => ({ ...s, r:true }));
     const url = `${API}?action=rubros&division=${esc(division)}&linea=${esc(linea)}${proveedor ? `&proveedor=${esc(proveedor)}` : ''}`;
     fetch(url)
       .then(r => r.json())
       .then((list: string[]) => {
-        setRubros(list);
+        const opts = toOptions(list);
+        setRubros(opts);
         if (rubro && !list.includes(rubro)) {
           setRubro('');
           applyToUrl(proveedor, division, linea, '');
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading((s) => ({ ...s, r:false })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [division, linea, proveedor]);
 
@@ -102,7 +138,8 @@ export default function FilterBar({ onChange }: Props) {
     d ? sp.set('division',  d) : sp.delete('division');
     l ? sp.set('linea',     l) : sp.delete('linea');
     r ? sp.set('rubro',     r) : sp.delete('rubro');
-    history.pushState({}, '', `${location.pathname}?${sp.toString()}`);
+    const q = sp.toString();
+    history.pushState({}, '', q ? `${location.pathname}?${q}` : location.pathname);
     window.dispatchEvent(new Event('filters:change'));
     onChange?.();
   }, [onChange]);
@@ -115,91 +152,123 @@ export default function FilterBar({ onChange }: Props) {
     applyToUrl('', '', '', '');
   };
 
-  /* ====== UI ====== */
+  // selected objects (react-select espera objeto)
+  const selProveedor = proveedores.find(o => o.value === proveedor) || null;
+  const selDivision  = divisiones.find(o => o.value === division) || null;
+  const selLinea     = lineas.find(o => o.value === linea) || null;
+  const selRubro     = rubros.find(o => o.value === rubro) || null;
+
+  // onChange handlers
+  const onProveedor = (opt: SingleValue<Opt>) => {
+    const v = opt?.value || '';
+    setProveedor(v);
+    setLinea('');
+    setRubro('');
+    applyToUrl(v, division, '', '');
+  };
+  const onDivision = (opt: SingleValue<Opt>) => {
+    const v = opt?.value || '';
+    setDivision(v);
+    setLinea('');
+    setRubro('');
+    applyToUrl(proveedor, v, '', '');
+  };
+  const onLinea = (opt: SingleValue<Opt>) => {
+    const v = opt?.value || '';
+    setLinea(v);
+    setRubro('');
+    applyToUrl(proveedor, division, v, '');
+  };
+  const onRubro = (opt: SingleValue<Opt>) => {
+    const v = opt?.value || '';
+    setRubro(v);
+    applyToUrl(proveedor, division, linea, v);
+  };
+
   return (
     <div className="w-full">
-  <div className="mx-auto max-w-[1200px] flex flex-wrap items-center justify-center gap-2 md:gap-3">
-    
-    {/* Select base style */}
-    {/** TIP: podés sacar esta clase a una constante si querés reutilizar */}
-    <select
-      className="border rounded-full px-2 py-1 text-sm min-w-[140px] w-full sm:w-auto"
-      value={proveedor}
-      onChange={(e) => {
-        const p = e.target.value;
-        setProveedor(p);
-        setLinea('');
-        setRubro('');
-        applyToUrl(p, division, '', '');
-      }}
-    >
-      <option value="">Todos los proveedores</option>
-      {proveedores.map((p) => <option key={p} value={p}>{p}</option>)}
-    </select>
+      <div className="mx-auto max-w-[1200px] flex flex-wrap items-center justify-center gap-2 md:gap-3">
+        <div className="w-full sm:w-auto">
+          <Select
+            inputId="proveedor"
+            isSearchable
+            isClearable
+            isLoading={loading.p}
+            options={proveedores}
+            value={selProveedor}
+            onChange={onProveedor}
+            placeholder="Todos los proveedores"
+            styles={pillStyles}
+            classNamePrefix="rs"
+          />
+        </div>
 
-    <select
-      className="border rounded-full px-2 py-1 text-sm min-w-[140px] w-full sm:w-auto"
-      value={division}
-      onChange={(e) => {
-        const d = e.target.value;
-        setDivision(d);
-        setLinea('');
-        setRubro('');
-        applyToUrl(proveedor, d, '', '');
-      }}
-    >
-      <option value="">Seleccioná división</option>
-      {divisiones.map((d) => <option key={d} value={d}>{d}</option>)}
-    </select>
+        <div className="w-full sm:w-auto">
+          <Select
+            inputId="division"
+            isSearchable
+            isClearable
+            isLoading={loading.d}
+            options={divisiones}
+            value={selDivision}
+            onChange={onDivision}
+            placeholder="Seleccioná división"
+            styles={pillStyles}
+            classNamePrefix="rs"
+          />
+        </div>
 
-    <select
-      className="border rounded-full px-2 py-1 text-sm min-w-[140px] w-full sm:w-auto"
-      value={linea}
-      onChange={(e) => {
-        const l = e.target.value;
-        setLinea(l);
-        setRubro('');
-        applyToUrl(proveedor, division, l, '');
-      }}
-      disabled={!division}
-    >
-      <option value="">{division ? 'Seleccioná línea' : 'Elegí primero una división'}</option>
-      {lineas.map((l) => <option key={l} value={l}>{l}</option>)}
-    </select>
+        <div className="w-full sm:w-auto">
+          <Select
+            inputId="linea"
+            isSearchable
+            isClearable
+            isDisabled={!division}
+            isLoading={loading.l}
+            options={lineas}
+            value={selLinea}
+            onChange={onLinea}
+            placeholder={division ? 'Seleccioná línea' : 'Elegí primero una división'}
+            styles={pillStyles}
+            classNamePrefix="rs"
+            noOptionsMessage={() => division ? 'Sin resultados' : 'Elegí una división'}
+          />
+        </div>
 
-    <select
-      className="border rounded-full px-2 py-1 text-sm min-w-[140px] w-full sm:w-auto"
-      value={rubro}
-      onChange={(e) => {
-        const r = e.target.value;
-        setRubro(r);
-        applyToUrl(proveedor, division, linea, r);
-      }}
-      disabled={!division || !linea}
-    >
-      <option value="">{(division && linea) ? 'Seleccioná rubro' : 'Elegí primero una línea'}</option>
-      {rubros.map((r) => <option key={r} value={r}>{r}</option>)}
-    </select>
+        <div className="w-full sm:w-auto">
+          <Select
+            inputId="rubro"
+            isSearchable
+            isClearable
+            isDisabled={!division || !linea}
+            isLoading={loading.r}
+            options={rubros}
+            value={selRubro}
+            onChange={onRubro}
+            placeholder={(division && linea) ? 'Seleccioná rubro' : 'Elegí primero una línea'}
+            styles={pillStyles}
+            classNamePrefix="rs"
+            noOptionsMessage={() => (division && linea) ? 'Sin resultados' : 'Elegí línea'}
+          />
+        </div>
 
-    {/* Botón limpiar */}
-    <button
-      type="button"
-      onClick={clearAll}
-      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 border rounded-full text-sm text-gray-700 hover:bg-gray-100 w-full sm:w-auto justify-center"
-      title="Borrar filtros"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none"
+        <button
+          type="button"
+          onClick={clearAll}
+          className="shrink-0 inline-flex items-center gap-1 px-2 py-1 border rounded-full text-sm text-gray-700 hover:bg-gray-100 w-full sm:w-auto justify-center"
+          title="Borrar filtros"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-        <path d="M10 11v6" />
-        <path d="M14 11v6" />
-        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-      </svg>
-      Limpiar
-    </button>
-  </div>
-</div>
-
-  )
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+          </svg>
+          Limpiar
+        </button>
+      </div>
+    </div>
+  );
 }

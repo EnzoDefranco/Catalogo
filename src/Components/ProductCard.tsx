@@ -33,7 +33,7 @@ const handleImgError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
 
   const imgSrc =
     product.imageUrl ||
-    `http://192.168.1.45/catalogo/productosImagenesCodEnro/${product.idArticulo}.webp`;
+    `https://tests-enzo.distrial.com.ar/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
     <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">
@@ -91,14 +91,14 @@ const handleImgError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Margen: {(margen * 100).toFixed(0)}%
         </label>
-        <input
+          <input
           type="range"
           min={0}
           max={0.5}
           step={0.01}
           value={margen}
           onChange={(e) => setMargen(Number(e.target.value))}
-          className="w-full"
+          className="w-full  bg-gray-300 h-2 rounded-lg accent-[#012b67]"
         />
       </div>
 

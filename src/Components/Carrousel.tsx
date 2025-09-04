@@ -7,7 +7,7 @@ const Carrousel: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('http://192.168.1.45/catalogo/listFotosCombos.php')
+    fetch('https://tests-enzo.distrial.com.ar/listFotosCombos.php')
       .then(res => res.json())
       .then(setImages)
       .catch(console.error);

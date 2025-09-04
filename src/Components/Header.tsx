@@ -54,12 +54,12 @@ export default function Header({ searchTerm = '' }: Props) {
 
             {/* Logo móvil */}
             <a href="/catalogo/" className="ml-2 block lg:hidden">
-              <img src="/catalogo/newLogoBlack.png" className="h-8" alt="Logo móvil" />
+              <img src="/newLogoBlack.png" className="h-8" alt="Logo móvil" />
             </a>
 
             {/* Logo desktop */}
             <a href="/catalogo/" className="hidden lg:block">
-              <img src="/catalogo/logoAzul.png" className="h-8" alt="Logo desktop" />
+              <img src="/logoAzul.png" className="h-8" alt="Logo desktop" />
             </a>
           </div>
 
@@ -88,13 +88,13 @@ export default function Header({ searchTerm = '' }: Props) {
 
           {/* DERECHA: Nav desktop */}
           <nav className="hidden lg:flex space-x-6">
-            <a href="#" className="no-underline text-md font-semibold text-blue-600 border py-2.5 px-5 rounded-full hover:bg-blue-600 hover:text-white transition">
+            <a href="#" className="no-underline text-md font-semibold text-[#012b67] border py-2.5 px-5 rounded-full hover:bg-[#012b67] hover:text-white transition">
               Quienes somos
             </a>
-            <a href="#" className="no-underline text-md font-semibold text-blue-600 border py-2.5 px-5 rounded-full hover:bg-blue-600 hover:text-white transition">
+            <a href="#" className="no-underline text-md font-semibold text-[#012b67] border py-2.5 px-5 rounded-full hover:bg-[#012b67] hover:text-white transition">
               Catálogo
             </a>
-            <a href="#" className="no-underline text-md font-semibold text-blue-600 border py-2.5 px-5 rounded-full hover:bg-blue-600 hover:text-white transition">
+            <a href="#" className="no-underline text-md font-semibold text-[#012b67] border py-2.5 px-5 rounded-full hover:bg-[#012b67] hover:text-white transition">
               Combos
             </a>
           </nav>
