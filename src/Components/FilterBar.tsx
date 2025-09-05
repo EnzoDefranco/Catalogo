@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Select from 'react-select';
 import type { SingleValue, StylesConfig } from 'react-select';
-
+import { jfetch } from '../lib/jfetch';
 
 type Props = { onChange?: () => void };
-const API = 'https://tests-enzo.distrial.com.ar/db.php';
+// Mejor relativo para dev/prod (proxy de Vite en dev)
+const API = '/db.php';
 
 type Opt = { value: string; label: string };
 
@@ -52,9 +53,9 @@ export default function FilterBar({ onChange }: Props) {
     const url = division
       ? `${API}?action=proveedores&division=${esc(division)}`
       : `${API}?action=proveedores`;
-    fetch(url)
-      .then(r => r.json())
-      .then((list: string[]) => {
+
+    jfetch<string[]>(url)
+      .then((list) => {
         const opts = toOptions(list);
         setProveedores(opts);
         if (proveedor && !list.includes(proveedor)) {
@@ -73,9 +74,9 @@ export default function FilterBar({ onChange }: Props) {
     const url = proveedor
       ? `${API}?action=divisiones&proveedor=${esc(proveedor)}`
       : `${API}?action=divisiones`;
-    fetch(url)
-      .then(r => r.json())
-      .then((list: string[]) => {
+
+    jfetch<string[]>(url)
+      .then((list) => {
         const opts = toOptions(list);
         setDivisiones(opts);
         if (division && !list.includes(division)) {
@@ -95,9 +96,9 @@ export default function FilterBar({ onChange }: Props) {
     if (!division) { setLineas([]); setLinea(''); return; }
     setLoading((s) => ({ ...s, l:true }));
     const url = `${API}?action=lineas&division=${esc(division)}${proveedor ? `&proveedor=${esc(proveedor)}` : ''}`;
-    fetch(url)
-      .then(r => r.json())
-      .then((list: string[]) => {
+
+    jfetch<string[]>(url)
+      .then((list) => {
         const opts = toOptions(list);
         setLineas(opts);
         if (linea && !list.includes(linea)) {
@@ -116,9 +117,9 @@ export default function FilterBar({ onChange }: Props) {
     if (!division || !linea) { setRubros([]); setRubro(''); return; }
     setLoading((s) => ({ ...s, r:true }));
     const url = `${API}?action=rubros&division=${esc(division)}&linea=${esc(linea)}${proveedor ? `&proveedor=${esc(proveedor)}` : ''}`;
-    fetch(url)
-      .then(r => r.json())
-      .then((list: string[]) => {
+
+    jfetch<string[]>(url)
+      .then((list) => {
         const opts = toOptions(list);
         setRubros(opts);
         if (rubro && !list.includes(rubro)) {

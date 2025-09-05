@@ -16,7 +16,7 @@ const Carrousel: React.FC = () => {
   const scroll = (dir: number) => {
     const carousel = carouselRef.current;
     if (!carousel) return;
-    const thumb = carousel.querySelector('.thumbnail') as HTMLDivElement;
+    const thumb = carousel.querySelector('.thumbnail') as HTMLDivElement | null;
     if (!thumb) return;
     const gap = 16; // px
     const scrollAmt = thumb.offsetWidth + gap;
@@ -24,9 +24,10 @@ const Carrousel: React.FC = () => {
   };
 
   return (
-    <div className="carousel-wrapper pt-32" style={{ position: 'relative' }}>
+    <div className="carousel-wrapper pt-32 relative">
+      {/* Flecha izquierda (oculta en mobile) */}
       <button
-        className="btn-arrow prev"
+        className="btn-arrow prev hidden md:inline-flex items-center justify-center"
         aria-label="Anterior"
         onClick={() => scroll(-1)}
         style={{
@@ -47,16 +48,11 @@ const Carrousel: React.FC = () => {
       >
         ‹
       </button>
+
       <div
-        className="carousel"
         ref={carouselRef}
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          overflowX: 'auto',
-          scrollBehavior: 'smooth',
-          padding: '1rem 3rem'
-        }}
+        className="carousel flex gap-4 overflow-x-auto scroll-smooth px-4 md:px-12"
+        style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
       >
         {images.map((src, i) => (
           <div
@@ -80,17 +76,15 @@ const Carrousel: React.FC = () => {
             <img
               src={src}
               alt={`Combo ${i + 1}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
         ))}
       </div>
+
+      {/* Flecha derecha (oculta en mobile) */}
       <button
-        className="btn-arrow next"
+        className="btn-arrow next hidden md:inline-flex items-center justify-center"
         aria-label="Siguiente"
         onClick={() => scroll(1)}
         style={{
@@ -118,7 +112,7 @@ const Carrousel: React.FC = () => {
           className="modal open"
           style={{
             position: 'fixed',
-            inset: 0,
+            inset: 0 as any,
             background: 'rgba(0,0,0,0.8)',
             display: 'flex',
             alignItems: 'center',

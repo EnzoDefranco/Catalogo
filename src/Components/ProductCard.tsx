@@ -36,7 +36,10 @@ const handleImgError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
     `https://tests-enzo.distrial.com.ar/productosImagenesCodEnro/${product.idArticulo}.webp`;
 
   return (
-    <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-lg max-w-xs mx-auto">
+    <div className="relative flex flex-col justify-between rounded-3xl bg-white p-5 pt-12 text-center shadow-md hover:shadow-xl max-w-xs mx-auto 
+             transform transition duration-300 ease-in-out 
+             hover:scale-105 hover:-translate-y-1
+             animate-fadeIn">
       {/* Badges */}
       <div className="absolute top-3 left-3 flex space-x-2">
         {isOutOfStock && (

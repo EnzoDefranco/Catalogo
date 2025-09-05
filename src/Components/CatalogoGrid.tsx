@@ -19,7 +19,7 @@ interface Props {
 export default function CatalogoGrid({ searchTerm = '' }: Props) {
   const [items, setItems]           = useState<Product[]>([]);
   const [page, setPage]             = useState(1);
-  const [limit]                     = useState(8);
+  const [limit]                     = useState(24); // 👈 trae 24 por “página”
   const [total, setTotal]           = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading]       = useState(false);
@@ -51,7 +51,8 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
       setDivision(sp.get('division') || '');
       setLinea(sp.get('linea') || '');
       setRubro(sp.get('rubro') || '');
-      setPage(1); // reset paginación al cambiar filtros
+      setPage(1);         // reset página
+      setItems([]);       // 👈 limpiar acumulado
     };
     window.addEventListener('popstate', onPop);
     window.addEventListener('filters:change', onPop);
@@ -61,10 +62,17 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
     };
   }, []);
 
+  // si cambia el término de búsqueda desde props, resetea
+  useEffect(() => {
+    setPage(1);
+    setItems([]);
+  }, [searchTerm]);
+
   // parámetros de búsqueda
   const qs = useMemo(() => {
     const params = new URLSearchParams({
       action: 'buscar',
+      // tu backend acepta busqueda (y si querés también q: hacé el alias en PHP)
       busqueda: searchTerm.trim(),
       page: String(page),
       limit: String(limit),
@@ -76,51 +84,45 @@ export default function CatalogoGrid({ searchTerm = '' }: Props) {
     return params.toString();
   }, [searchTerm, provider, division, linea, rubro, page, limit]);
 
-  // fetch a la API PHP
+  // fetch a la API PHP (APPEND)
   useEffect(() => {
     const ctrl = new AbortController();
     setLoading(true);
     setError(null);
 
-fetch(`https://tests-enzo.distrial.com.ar/db.php?${qs}`, { signal: ctrl.signal })
-  .then(async (res) => {
+    fetch(`https://tests-enzo.distrial.com.ar/db.php?${qs}`, { signal: ctrl.signal, credentials: 'include' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as ApiBuscarResp;
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+        if ((json as any).error) throw new Error(String((json as any).error));
 
+        // 👇 si page === 1 reemplaza; si no, agrega al final
+        setItems(prev => (page === 1 ? (json.data ?? []) : [...prev, ...(json.data ?? [])]));
+        setTotal(json.total ?? 0);
+        setTotalPages(json.totalPages ?? 1);
+      })
+      .catch((err: any) => {
+        if (err?.name !== 'AbortError') setError(err.message || 'Error cargando datos');
+      })
+      .finally(() => setLoading(false));
 
-    const json = (await res.json()) as ApiBuscarResp;
+    return () => {
+      ctrl.abort();
+    };
+  }, [qs, page]); // page en deps para que al incrementarla traiga y agregue
 
-    if ((json as any).error) {
-      console.error("⚠️ Error en el JSON:", (json as any).error);
-      throw new Error(String((json as any).error));
-    }
-
-    setItems(json.data ?? []);
-    setTotal(json.total ?? 0);
-    setTotalPages(json.totalPages ?? 1);
-  })
-  .catch((err) => {
-    if (err.name !== 'AbortError') {
-      setError(err.message || 'Error cargando datos');
-    } 
-  })
-  .finally(() => {
-    setLoading(false);
-  });
-
-return () => {
-  console.log("🧹 Cleanup ejecutado, abortando fetch.");
-  ctrl.abort();
-};
-  }, [qs]);
+  const hasMore = page < totalPages;
 
   return (
     <div>
       {/* Estado: cargando / error / vacío */}
-      {loading && <div className="mt-4 text-center text-sm text-gray-600">Cargando…</div>}
-      {error && <div className="mt-4 text-center text-sm text-red-600">Error: {error}</div>}
+      {loading && page === 1 && (
+        <div className="mt-4 text-center text-sm text-gray-600">Cargando…</div>
+      )}
+      {error && (
+        <div className="mt-4 text-center text-sm text-red-600">Error: {error}</div>
+      )}
       {!loading && !error && items.length === 0 && (
         <div className="mt-4 text-center text-sm text-gray-600">No se encontraron resultados.</div>
       )}
@@ -132,30 +134,26 @@ return () => {
         ))}
       </div>
 
-      {/* Paginación */}
-      <nav className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-8">
-        <button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1 || loading}
-          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-        >
-          « Anterior
-        </button>
-
-        <span className="text-sm sm:text-base text-gray-700 font-medium">
-          Página <strong>{page}</strong> de <strong>{Math.max(1, totalPages)}</strong>
-          <span className="hidden sm:inline"> · {total} resultados</span>
+      {/* Footer: “Cargar más” (append) */}
+      <div className="flex flex-col items-center gap-3 mt-8">
+        <span className="text-sm text-gray-600">
+          Mostrando <strong>{items.length}</strong> de <strong>{total}</strong>
         </span>
 
-        <button
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page >= totalPages || loading}
-          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-        >
-          Siguiente »
-        </button>
-      </nav>
-
+        {hasMore ? (
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={loading}
+            className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {loading ? 'Cargando…' : 'Cargar más'}
+          </button>
+        ) : (
+          items.length > 0 && (
+            <span className="text-sm text-gray-500">No hay más resultados</span>
+          )
+        )}
+      </div>
     </div>
   );
 }
